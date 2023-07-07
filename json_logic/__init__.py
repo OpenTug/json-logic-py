@@ -186,8 +186,7 @@ def jsonLogic(tests, data=None):
     executed_logic = {operator: executed_logic}
 
     if operator == "var":
-        gv = get_var(data, *new_values)
-        return gv, executed_logic
+        return get_var(data, *new_values), executed_logic
     if operator == "missing":
         return missing(data, *new_values), executed_logic
     if operator == "missing_some":
