@@ -1,21 +1,10 @@
 # This is a Python implementation of the following jsonLogic JS library:
 # https://github.com/jwadhams/json-logic-js
-from __future__ import unicode_literals
 
 import logging
-import sys
-
-from six.moves import reduce
+from functools import reduce
 
 logger = logging.getLogger(__name__)
-
-try:
-    unicode
-except NameError:
-    pass
-else:
-    # Python 2 fallback.
-    str = unicode
 
 
 def if_(*args):
@@ -73,11 +62,12 @@ def to_numeric(arg):
         else:
             return int(arg)
     return arg
-#
+
 
 def plus(*args):
     """Sum converts either to ints or to floats."""
     return sum(to_numeric(arg) for arg in args)
+
 
 def minus(*args):
     """Also, converts either to ints or to floats."""
