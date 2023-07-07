@@ -11,9 +11,9 @@ def if_(*args):
     """Implements the 'if' operator with support for multiple elseif-s."""
     for i in range(0, len(args) - 1, 2):
         if args[i]:
-            return args[i + 1], i+1
+            return args[i + 1], i + 1
     if len(args) % 2:
-        return args[-1], len(args)-1
+        return args[-1], len(args) - 1
     else:
         return None, None
 
@@ -196,10 +196,10 @@ def jsonLogic(tests, data=None):
     if operator not in operations:
         raise ValueError("Unrecognized operation %s" % operator)
 
-    if operator == 'if':
+    if operator == "if":
         result, branch_taken = operations[operator](*new_values)
         if branch_taken is None:
-            return {}
+            return result, {}
         # Replace the {"if": ...} with only the branch that was executed
         return result, executed_logic[operator][branch_taken]
     return operations[operator](*new_values), executed_logic
