@@ -1,31 +1,21 @@
 # This is a Python implementation of the following jsonLogic JS library:
 # https://github.com/jwadhams/json-logic-js
-from __future__ import unicode_literals
 
-import sys
-from six.moves import reduce
 import logging
+from functools import reduce
 
 logger = logging.getLogger(__name__)
-
-try:
-    unicode
-except NameError:
-    pass
-else:
-    # Python 2 fallback.
-    str = unicode
 
 
 def if_(*args):
     """Implements the 'if' operator with support for multiple elseif-s."""
     for i in range(0, len(args) - 1, 2):
         if args[i]:
-            return args[i + 1]
+            return args[i + 1], i + 1
     if len(args) % 2:
-        return args[-1]
+        return args[-1], len(args) - 1
     else:
-        return None
+        return None, None
 
 
 def soft_equals(a, b):
@@ -58,9 +48,7 @@ def less(a, b, *args):
 
 def less_or_equal(a, b, *args):
     """Implements the '<=' operator with JS-style type coertion."""
-    return (
-        less(a, b) or soft_equals(a, b)
-    ) and (not args or less_or_equal(b, *args))
+    return (less(a, b) or soft_equals(a, b)) and (not args or less_or_equal(b, *args))
 
 
 def to_numeric(arg):
@@ -69,11 +57,12 @@ def to_numeric(arg):
     This is important, because e.g. {"!==": [{"+": "0"}, 0.0]}
     """
     if isinstance(arg, str):
-        if '.' in arg:
+        if "." in arg:
             return float(arg)
         else:
             return int(arg)
     return arg
+
 
 def plus(*args):
     """Sum converts either to ints or to floats."""
@@ -101,7 +90,7 @@ def merge(*args):
 def get_var(data, var_name, not_found=None):
     """Gets variable value from data dictionary."""
     try:
-        for key in str(var_name).split('.'):
+        for key in str(var_name).split("."):
             try:
                 data = data[key]
             except TypeError:
@@ -175,7 +164,7 @@ def jsonLogic(tests, data=None):
     """Executes the json-logic with given data."""
     # You've recursed to a primitive, stop!
     if tests is None or not isinstance(tests, dict):
-        return tests
+        return tests, tests
 
     data = data or {}
 
@@ -188,16 +177,28 @@ def jsonLogic(tests, data=None):
         values = [values]
 
     # Recursion!
-    values = [jsonLogic(val, data) for val in values]
+    new_values = []
+    executed_logic = []
+    for val in values:
+        value, executed = jsonLogic(val, data)
+        new_values.append(value)
+        executed_logic.append(executed)
+    executed_logic = {operator: executed_logic}
 
-    if operator == 'var':
-        return get_var(data, *values)
-    if operator == 'missing':
-        return missing(data, *values)
-    if operator == 'missing_some':
-        return missing_some(data, *values)
+    if operator == "var":
+        return get_var(data, *new_values), executed_logic
+    if operator == "missing":
+        return missing(data, *new_values), executed_logic
+    if operator == "missing_some":
+        return missing_some(data, *new_values), executed_logic
 
     if operator not in operations:
         raise ValueError("Unrecognized operation %s" % operator)
 
-    return operations[operator](*values)
+    if operator == "if":
+        result, branch_taken = operations[operator](*new_values)
+        if branch_taken is None:
+            return result, {}
+        # Replace the {"if": ...} with only the branch that was executed
+        return result, executed_logic[operator][branch_taken]
+    return operations[operator](*new_values), executed_logic
