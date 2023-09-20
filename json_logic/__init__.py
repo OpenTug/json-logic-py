@@ -157,6 +157,7 @@ operations = {
     "max": lambda *args: max(args),
     "merge": merge,
     "count": lambda *args: sum(1 if a else 0 for a in args),
+    "quantity": lambda a: a,
 }
 
 
@@ -180,6 +181,10 @@ def jsonLogic(tests, data=None):
     new_values = []
     executed_logic = []
     for val in values:
+        # Skip descriptions but keep in executed
+        if isinstance(val, dict) and "description" in val:
+            executed_logic.append(val)
+            continue
         value, executed = jsonLogic(val, data)
         new_values.append(value)
         executed_logic.append(executed)
