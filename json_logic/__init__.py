@@ -96,6 +96,8 @@ def get_var(data, var_name, not_found=None):
             except TypeError:
                 data = data[int(key)]
     except (KeyError, TypeError, ValueError):
+        if not_found is None:
+            raise ValueError(f"Unknown variable: {var_name}")
         return not_found
     else:
         return data
