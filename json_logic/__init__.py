@@ -2,6 +2,8 @@
 # https://github.com/jwadhams/json-logic-js
 
 import logging
+import math
+import numbers
 from functools import reduce
 
 logger = logging.getLogger(__name__)
@@ -19,7 +21,8 @@ def if_(*args):
 
 
 def soft_equals(a, b):
-    """Implements the '==' operator, which does type JS-style coertion."""
+    """Implements the '==' operator, which does type JS-style coertion and has a small
+    tolerance for numbers."""
     if isinstance(a, str) or isinstance(b, str):
         return str(a) == str(b)
     if isinstance(a, bool) or isinstance(b, bool):
@@ -27,11 +30,16 @@ def soft_equals(a, b):
     return a == b
 
 
+def almost_equal(a, b):
+    """Checks if two variables are numeric and nearly equal (to 1E-9 relative tolerance)"""
+    return isinstance(a, numbers.Number) and isinstance(b, numbers.Number) and math.isclose(a, b)
+
+
 def hard_equals(a, b):
     """Implements the '===' operator."""
     if type(a) != type(b):
         return False
-    return a == b
+    return a == b or almost_equal(a, b)
 
 
 def less(a, b, *args):
